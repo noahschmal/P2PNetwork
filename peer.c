@@ -16,6 +16,10 @@
 /*       Notes      */
 //////////////////////
 
+// Create class diagram
+
+// automatically choose port
+
 // Create start_server()
 // Create connect(user) that calls start_server and takes a user and an ip/port to connect to
 // Create create(user) that creates an empty network
@@ -26,6 +30,9 @@
 // Sending sends to everyone in the connection list
 
 // Create ping_connections() that checks if all connections are still connected everyone so often
+
+// Messages buffers for sending files, sending messages, and sending streams
+// Messages receiving functions for each type (ex: file, message, voice)
 
 
 
@@ -72,7 +79,7 @@ int main(int argc, char const* argv[])
     // Retrieve IP addresses
     host_entry = gethostbyname(hostbuffer);
     if (host_entry == NULL) {
-        herror("gethostbyname error");
+        herror("[-]gethostbyname error");
         exit(1);
     }
     addr_list = (struct in_addr **)host_entry->h_addr_list;
@@ -86,7 +93,7 @@ int main(int argc, char const* argv[])
     // Have the user choose which ip address to use
     //                                                                              Add protection for choice
     int ip_choice;
-    printf("Enter your port number:");
+    printf("Enter your ip selection:");
     scanf("%d", &ip_choice);
     SERVER_IP = inet_ntoa(*addr_list[ip_choice - 1]);
 
