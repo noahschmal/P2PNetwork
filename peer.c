@@ -11,6 +11,8 @@
 #include <arpa/inet.h>
 #include <pthread.h>
 
+//                                                                              Create Struct for User
+
 char name[20];
 int PORT;
 
@@ -50,7 +52,7 @@ int main(int argc, char const* argv[])
     // Server: Set address
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = port;
-    server_addr.sin_addr.s_addr = INADDR_ANY;//inet_addr(ip);
+    server_addr.sin_addr.s_addr = inet_addr(ip); //INADDR_ANY;//inet_addr(ip);
 
     // Server: Bind socket
     connectStatus = bind(server_fd, (struct sockaddr*)&server_addr, sizeof(server_addr));
@@ -127,7 +129,7 @@ void sending()
 
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = port;
-    server_addr.sin_addr.s_addr = INADDR_ANY;//inet_addr(ip);
+    server_addr.sin_addr.s_addr = inet_addr(ip); //INADDR_ANY;//inet_addr(ip);
 
     connectStatus = connect(client_fd, (struct sockaddr*)&server_addr, sizeof(server_addr));
     if(connectStatus == -1) {
