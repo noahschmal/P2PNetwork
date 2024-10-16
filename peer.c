@@ -10,8 +10,42 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include <pthread.h>
+#include <netdb.h>
+
+//////////////////////
+/*       Notes      */
+//////////////////////
+
+// Create start_server()
+// Create connect(user) that calls start_server and takes a user and an ip/port to connect to
+// Create create(user) that creates an empty network
+
+// Flesh out connection data structure (linked list of connections)
+
+// Make sending() and receiving()
+    // Sending sends to everyone in the connection list
+
+// Create ping_connections() that checks if all connections are still connected everyone so often
+
+
+
+///////////////////////
+/* Custom Data Types */
+///////////////////////
+
+typedef struct user {
+    char name[20];
+    char* SERVER_IP;
+    int PORT;
+}user;
+
+typedef struct connection {
+    struct user* connected_user;
+    struct connection* next_connection;
+}connection;
 
 char name[20];
+char* SERVER_IP;
 int PORT;
 
 void sending();
@@ -20,6 +54,42 @@ void *receive_thread(void *server_fd);
 
 int main(int argc, char const* argv[])
 {
+
+    /////////////////////////////
+    /* Gather User Information */
+    /////////////////////////////
+
+    user host;
+
+    char hostbuffer[256];
+    struct hostent *host_entry;
+    int hostname;
+    struct in_addr **addr_list;
+
+    // Retrieve hostname
+    hostname = gethostname(hostbuffer, sizeof(hostbuffer));
+
+    // Retrieve IP addresses
+    host_entry = gethostbyname(hostbuffer);
+    if (host_entry == NULL) {
+        herror("gethostbyname error");
+        exit(1);
+    }
+    addr_list = (struct in_addr **)host_entry->h_addr_list;
+
+    // Print out the IP Addresses
+    printf("IP address:\n");
+    for (int i = 0; addr_list[i] != NULL; i++) {
+        printf("[%d] %s\n", i+1, inet_ntoa(*addr_list[i]));
+    }
+
+    // Have the user choose which ip address to use
+    //                                                                              Add protection for choice
+    int ip_choice;
+    printf("Enter your port number:");
+    scanf("%d", &ip_choice);
+    SERVER_IP = inet_ntoa(*addr_list[ip_choice - 1]);
+
     printf("Enter name:");
     scanf("%s", name);
 
@@ -31,7 +101,7 @@ int main(int argc, char const* argv[])
     ///////////////////////////////
 
     // Server: Connection information
-    char *ip = "127.0.0.1";
+    char *ip = "10.109.152.72";
     int port = PORT;
     int connectStatus;
 
@@ -50,7 +120,7 @@ int main(int argc, char const* argv[])
     // Server: Set address
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = port;
-    server_addr.sin_addr.s_addr = INADDR_ANY;//inet_addr(ip);
+    server_addr.sin_addr.s_addr = inet_addr(SERVER_IP);//INADDR_ANY;//inet_addr(ip);
 
     // Server: Bind socket
     connectStatus = bind(server_fd, (struct sockaddr*)&server_addr, sizeof(server_addr));
@@ -108,7 +178,7 @@ void sending()
     char buffer[2000] = {0};
     char hello[1024] = {0};
 
-    char *ip = "127.0.0.1";
+    char *ip = "68.234.244.147";
     int port = 8080;
     int connectStatus;
 
@@ -127,7 +197,7 @@ void sending()
 
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = port;
-    server_addr.sin_addr.s_addr = INADDR_ANY;//inet_addr(ip);
+    server_addr.sin_addr.s_addr = inet_addr(ip);//INADDR_ANY;//inet_addr(ip);
 
     connectStatus = connect(client_fd, (struct sockaddr*)&server_addr, sizeof(server_addr));
     if(connectStatus == -1) {
@@ -167,9 +237,9 @@ void receiving(int server_fd)
     int client_socket = accept(server_fd, NULL, NULL);
 
     if (client_socket != -1) {
-    printf("Receiving...\n");
-    recv(client_socket, strData, sizeof(strData), 0);
+        printf("Receiving...\n");
+        recv(client_socket, strData, sizeof(strData), 0);
 
-    printf("Message: %s\n", strData);
+        printf("Message: %s\n", strData);
     }
 }
