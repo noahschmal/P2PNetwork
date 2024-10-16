@@ -42,18 +42,14 @@
 
 typedef struct user {
     char name[20];
-    char* SERVER_IP;
-    int PORT;
+    char SERVER_IP[20];
+    int port;
 }user;
 
 typedef struct connection {
     struct user* connected_user;
     struct connection* next_connection;
 }connection;
-
-char name[20];
-char* SERVER_IP;
-int PORT;
 
 void sending();
 void receiving(int server_fd);
@@ -85,7 +81,7 @@ int main(int argc, char const* argv[])
     addr_list = (struct in_addr **)host_entry->h_addr_list;
 
     // Print out the IP Addresses
-    printf("IP address:\n");
+    /*printf("IP address:\n");
     for (int i = 0; addr_list[i] != NULL; i++) {
         printf("[%d] %s\n", i+1, inet_ntoa(*addr_list[i]));
     }
@@ -95,13 +91,16 @@ int main(int argc, char const* argv[])
     int ip_choice;
     printf("Enter your ip selection:");
     scanf("%d", &ip_choice);
-    SERVER_IP = inet_ntoa(*addr_list[ip_choice - 1]);
+    host.SERVER_IP = inet_ntoa(*addr_list[ip_choice - 1]);*/
 
-    printf("Enter name:");
-    scanf("%s", name);
+    printf("Enter your IP selection: ");
+    scanf("%s",  host.SERVER_IP);
+
+    printf("Enter name: ");
+    scanf("%s", host.name);
 
     printf("Enter your port number:");
-    scanf("%d", &PORT);
+    scanf("%d", &host.port);
 
     ///////////////////////////////
     /* Create Server Information */
@@ -109,7 +108,7 @@ int main(int argc, char const* argv[])
 
     // Server: Connection information
     char *ip = "10.109.152.72";
-    int port = PORT;
+    int port = host.port;
     int connectStatus;
 
     // Server: socket and address
@@ -127,7 +126,7 @@ int main(int argc, char const* argv[])
     // Server: Set address
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = port;
-    server_addr.sin_addr.s_addr = inet_addr(SERVER_IP);//INADDR_ANY;//inet_addr(ip);
+    server_addr.sin_addr.s_addr = inet_addr(host.SERVER_IP);//INADDR_ANY;//inet_addr(ip);
 
     // Server: Bind socket
     connectStatus = bind(server_fd, (struct sockaddr*)&server_addr, sizeof(server_addr));
@@ -217,7 +216,7 @@ void sending()
     printf("Enter your message:");
     scanf("%c", &dummy); //The buffer is our enemy
     scanf("%[^\n]s", hello);
-    sprintf(buffer, "%s[PORT:%d] says: %s", name, PORT, hello);
+    sprintf(buffer, "[PORT:%d] says: %s", port, hello);
 
     send(client_fd, buffer, sizeof(buffer), 0);
 
