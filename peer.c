@@ -44,6 +44,8 @@ typedef struct connection {
     struct connection* next_connection;
 }connection;
 
+//                                                                              Create Struct for User
+
 char name[20];
 char* SERVER_IP;
 int PORT;
@@ -120,7 +122,11 @@ int main(int argc, char const* argv[])
     // Server: Set address
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = port;
+<<<<<<< HEAD
     server_addr.sin_addr.s_addr = inet_addr(SERVER_IP);//INADDR_ANY;//inet_addr(ip);
+=======
+    server_addr.sin_addr.s_addr = inet_addr(ip); //INADDR_ANY;//inet_addr(ip);
+>>>>>>> 57a5a08e3bf78c2e3e73b38f5c9608e77714504d
 
     // Server: Bind socket
     connectStatus = bind(server_fd, (struct sockaddr*)&server_addr, sizeof(server_addr));
@@ -197,7 +203,11 @@ void sending()
 
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = port;
+<<<<<<< HEAD
     server_addr.sin_addr.s_addr = inet_addr(ip);//INADDR_ANY;//inet_addr(ip);
+=======
+    server_addr.sin_addr.s_addr = inet_addr(ip); //INADDR_ANY;//inet_addr(ip);
+>>>>>>> 57a5a08e3bf78c2e3e73b38f5c9608e77714504d
 
     connectStatus = connect(client_fd, (struct sockaddr*)&server_addr, sizeof(server_addr));
     if(connectStatus == -1) {
