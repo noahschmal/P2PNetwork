@@ -66,7 +66,7 @@ int main(int argc, char const* argv[])
 
     user host;
 
-    /*char hostbuffer[256];
+    char hostbuffer[256];
     struct hostent *host_entry;
     int hostname;
     struct in_addr **addr_list;
@@ -84,6 +84,7 @@ int main(int argc, char const* argv[])
 
     // Print out the IP Addresses
     printf("IP address:\n");
+    printf("[0] Enter custom address\n");
     for (int i = 0; addr_list[i] != NULL; i++) {
         printf("[%d] %s\n", i+1, inet_ntoa(*addr_list[i]));
     }
@@ -91,12 +92,14 @@ int main(int argc, char const* argv[])
     // Have the user choose which ip address to use
     //                                                                              Add protection for choice
     int ip_choice;
-    printf("Enter your ip selection:");
+    printf("Enter your ip selection: ");
     scanf("%d", &ip_choice);
-    host.SERVER_IP = inet_ntoa(*addr_list[ip_choice - 1]);*/
-
-    printf("Enter your IP selection: ");
-    scanf("%s",  host.SERVER_IP);
+    if (ip_choice != 0) {
+        strcpy(host.SERVER_IP, inet_ntoa(*addr_list[ip_choice - 1]));
+    } else if (ip_choice == 0) {
+        printf("Enter your IP: ");
+        scanf("%s", host.SERVER_IP);
+    }
 
     printf("Enter name: ");
     scanf("%s", host.name);
