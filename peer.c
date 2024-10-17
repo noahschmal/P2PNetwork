@@ -54,6 +54,8 @@ typedef struct connection {
 void sending();
 void receiving(int server_fd);
 void *receive_thread(void *server_fd);
+void send_message();
+void create_network(user* host, int* server_fd);
 
 int main(int argc, char const* argv[])
 {
@@ -64,7 +66,7 @@ int main(int argc, char const* argv[])
 
     user host;
 
-    char hostbuffer[256];
+    /*char hostbuffer[256];
     struct hostent *host_entry;
     int hostname;
     struct in_addr **addr_list;
@@ -81,7 +83,7 @@ int main(int argc, char const* argv[])
     addr_list = (struct in_addr **)host_entry->h_addr_list;
 
     // Print out the IP Addresses
-    /*printf("IP address:\n");
+    printf("IP address:\n");
     for (int i = 0; addr_list[i] != NULL; i++) {
         printf("[%d] %s\n", i+1, inet_ntoa(*addr_list[i]));
     }
@@ -102,22 +104,33 @@ int main(int argc, char const* argv[])
     printf("Enter your port number:");
     scanf("%d", &host.port);
 
+    int server_fd;
+    create_network(&host, &server_fd);
+
+    send_message();
+
+    // Server: close socket
+    printf("[+]Closing the server connection.\n");
+    close(server_fd);
+
+    return 0;
+}
+
+void create_network(user* host, int* server_fd) {
     ///////////////////////////////
     /* Create Server Information */
     ///////////////////////////////
+    printf("[-+-]Server ip: %s:%d\n", host->SERVER_IP, host->port);
 
     // Server: Connection information
-    char *ip = "10.109.152.72";
-    int port = host.port;
     int connectStatus;
 
-    // Server: socket and address
-    int server_fd;
+    // Server: Socket and address
     struct sockaddr_in server_addr;
 
     // Server: Create socket
-    server_fd = socket(AF_INET, SOCK_STREAM, 0);
-    if(server_fd < 0) {
+    *server_fd = socket(AF_INET, SOCK_STREAM, 0);
+    if(*server_fd < 0) {
         perror("[-]Error in socket");
         exit(1);
     }
@@ -125,11 +138,11 @@ int main(int argc, char const* argv[])
 
     // Server: Set address
     server_addr.sin_family = AF_INET;
-    server_addr.sin_port = port;
-    server_addr.sin_addr.s_addr = inet_addr(host.SERVER_IP);//INADDR_ANY;//inet_addr(ip);
+    server_addr.sin_port = host->port;
+    server_addr.sin_addr.s_addr = inet_addr(host->SERVER_IP); //INADDR_ANY;
 
     // Server: Bind socket
-    connectStatus = bind(server_fd, (struct sockaddr*)&server_addr, sizeof(server_addr));
+    connectStatus = bind(*server_fd, (struct sockaddr*)&server_addr, sizeof(server_addr));
     if(connectStatus < 0) {
         perror("[-]Error in bind");
         exit(1);
@@ -137,26 +150,28 @@ int main(int argc, char const* argv[])
     printf("[+]Binding successfull.\n");
 
     // Server: Listen with socket
-    if(listen(server_fd, 10) == 0){
+    if (listen(*server_fd, 10) == 0) {
         printf("[+]Listening....\n");
-    }else{
+    } else {
         perror("[-]Error in listening");
         exit(1);
     }
 
     // Create thread for server to accept connections on
     pthread_t tid;
-    pthread_create(&tid, NULL, &receive_thread, &server_fd);
+    pthread_create(&tid, NULL, &receive_thread, server_fd);
+}
 
+void send_message()
+{
     ///////////////////////////////
     /* Create Client Information */
     ///////////////////////////////
     int choice;
-    printf("\n[+]At any point in time press the following:*****\n1.Send message\n0.Quit\n");
+    printf("\n[+]At any point in time press the following:\n1. Send message\n0. Quit\n");
     printf("\nEnter choice:");
     do
     {
-
         scanf("%d", &choice);
         switch (choice)
         {
@@ -164,18 +179,12 @@ int main(int argc, char const* argv[])
                 sending();
                 break;
             case 0:
-                printf("\nLeaving\n");
+                printf("Leaving\n");
                 break;
             default:
-                printf("\nWrong choice\n");
+                printf("Wrong choice\n");
         }
     } while (choice);
-
-    // Server: close socket
-    printf("[+]Closing the server connection.\n");
-    close(server_fd);
-
-    return 0;
 }
 
 //Sending messages to port
@@ -199,7 +208,7 @@ void sending()
         perror("[-]Error in socket");
         exit(1);
     }
-    printf("[+]Server socket created successfully.\n");
+    printf("[+]Client socket created successfully.\n");
 
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = port;
