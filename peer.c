@@ -11,6 +11,7 @@
 #include <arpa/inet.h>
 #include <pthread.h>
 #include <netdb.h>
+#define SIZE 1024
 
 //////////////////////
 /*       Notes      */
@@ -56,6 +57,9 @@ void receiving(int server_fd);
 void *receive_thread(void *server_fd);
 void send_message();
 void create_network(user* host, int* server_fd);
+void send_file();
+void receive_file(int server_fd);
+void receive_message(int server_fd);
 
 int main(int argc, char const* argv[])
 {
@@ -83,7 +87,7 @@ int main(int argc, char const* argv[])
     addr_list = (struct in_addr **)host_entry->h_addr_list;
 
     // Print out the IP Addresses
-    printf("IP address:\n");
+    printf("IP address: \n");
     printf("[0] Enter custom address\n");
     for (int i = 0; addr_list[i] != NULL; i++) {
         printf("[%d] %s\n", i+1, inet_ntoa(*addr_list[i]));
@@ -104,7 +108,7 @@ int main(int argc, char const* argv[])
     printf("Enter name: ");
     scanf("%s", host.name);
 
-    printf("Enter your port number:");
+    printf("Enter your port number: ");
     scanf("%d", &host.port);
 
     int server_fd;
@@ -171,8 +175,8 @@ void send_message()
     /* Create Client Information */
     ///////////////////////////////
     int choice;
-    printf("\n[+]At any point in time press the following:\n1. Send message\n0. Quit\n");
-    printf("\nEnter choice:");
+    printf("\n[+]At any point in time press the following:\n1. Send message\n2. Send file\n0. Quit\n");
+    printf("\nEnter choice: ");
     do
     {
         scanf("%d", &choice);
@@ -181,6 +185,8 @@ void send_message()
             case 1:
                 sending();
                 break;
+            case 2:
+                send_file();
             case 0:
                 printf("Leaving\n");
                 break;
@@ -196,7 +202,7 @@ void sending()
     char buffer[2000] = {0};
     char hello[1024] = {0};
 
-    char *ip = "68.234.244.147";
+    char *ip = "68.234.244.147"; // 68.234.244.147
     int port = 8080;
     int connectStatus;
 
@@ -258,6 +264,96 @@ void receiving(int server_fd)
         printf("Receiving...\n");
         recv(client_socket, strData, sizeof(strData), 0);
 
-        printf("Message: %s\n", strData);
+        if (strcmp(strData, "FILE_TRANSFER") == 0) {
+            printf("[+] Receiving File...\n");
+            receive_file(server_fd);
+        } else {
+
+            printf("Message: %s\n", strData);
+        }
     }
+}
+
+void receive_message(int server_fd) {
+
+}
+
+void receive_file(int server_fd) {
+    int n;
+    FILE *fp;
+    char *filename = "recv.txt";
+    char buffer[SIZE];
+
+    fp = fopen(filename, "w");
+    while (1) {
+        n = recv(server_fd, buffer, SIZE, 0);
+        if (n <= 0){
+            break;
+            return;
+        }
+        fprintf(fp, "%s", buffer);
+        bzero(buffer, SIZE);
+    }
+    return;
+}
+
+void send_file() {
+
+    // file stuff and things
+    FILE *fp;
+    char *filename = "send.txt";
+    fp = fopen(filename, "r");
+    if (fp == NULL) {
+        perror("[-]Error in reading file.");
+        exit(1);
+    }
+
+
+    char hello[1024] = {0};
+
+    char *ip = "68.234.244.147"; // 68.234.244.147 // Josh: 68.234.244.163
+    int port = 8080;
+    int connectStatus;
+
+    printf("Enter the port to send message:"); //Considering each peer will enter different port
+    scanf("%d", &port);
+
+    int client_fd;
+    struct sockaddr_in server_addr;
+
+    client_fd = socket(AF_INET, SOCK_STREAM, 0);
+    if(client_fd < 0) {
+        perror("[-]Error in socket");
+        exit(1);
+    }
+    printf("[+]Client socket created successfully.\n");
+
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = port;
+    server_addr.sin_addr.s_addr = inet_addr(ip);//INADDR_ANY;//inet_addr(ip);
+
+    connectStatus = connect(client_fd, (struct sockaddr*)&server_addr, sizeof(server_addr));
+    if(connectStatus == -1) {
+        perror("[-]Error in socket");
+        exit(1);
+    }
+    printf("[+]Connected to Server.\n");
+
+    int n;
+    char data[SIZE] = {0};
+    char buffer[32] = "FILE_TRANSFER";
+
+    send(client_fd, buffer, sizeof(buffer), 0);
+
+    while(fgets(data, SIZE, fp) != NULL) {
+        if (send(client_fd, data, sizeof(data), 0) == -1) {
+            perror("[-]Error in sending file.\n");
+            exit(1);
+        }
+        bzero(data, SIZE);
+    }
+
+    printf("[+]File sent.\n");
+    printf("[+]Closing the client connection.\n");
+    close(client_fd);
 }
