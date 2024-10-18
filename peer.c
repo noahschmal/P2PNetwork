@@ -187,6 +187,7 @@ void send_message()
                 break;
             case 2:
                 send_file();
+                break;
             case 0:
                 printf("Leaving\n");
                 break;
@@ -202,8 +203,8 @@ void sending()
     char buffer[2000] = {0};
     char hello[1024] = {0};
 
-    char *ip = "68.234.244.147"; // 68.234.244.147
-    int port = 8080;
+    char *ip = "68.234.244.163"; // 68.234.244.147
+    int port;
     int connectStatus;
 
     printf("Enter the port to send message:"); //Considering each peer will enter different port
@@ -264,7 +265,7 @@ void receiving(int server_fd)
         printf("Receiving...\n");
         recv(client_socket, strData, sizeof(strData), 0);
 
-        if (strcmp(strData, "FILE_TRANSFER") == 0) {
+        if (strcmp(strData, "FILE_TRANSFER2") == 0) {
             printf("[+] Receiving File...\n");
             receive_file(server_fd);
         } else {
@@ -287,6 +288,7 @@ void receive_file(int server_fd) {
     fp = fopen(filename, "w");
     while (1) {
         n = recv(server_fd, buffer, SIZE, 0);
+        printf("status: %d\n", n);
         if (n <= 0){
             break;
             return;
@@ -312,7 +314,7 @@ void send_file() {
     char hello[1024] = {0};
 
     char *ip = "68.234.244.147"; // 68.234.244.147 // Josh: 68.234.244.163
-    int port = 8080;
+    int port;
     int connectStatus;
 
     printf("Enter the port to send message:"); //Considering each peer will enter different port
