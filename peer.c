@@ -203,7 +203,7 @@ void sending()
     char buffer[2000] = {0};
     char hello[1024] = {0};
 
-    char *ip = "68.234.244.163"; // 68.234.244.147
+    char *ip = "10.108.41.167"; // 68.234.244.147
     int port;
     int connectStatus;
 
@@ -265,9 +265,9 @@ void receiving(int server_fd)
         printf("Receiving...\n");
         recv(client_socket, strData, sizeof(strData), 0);
 
-        if (strcmp(strData, "FILE_TRANSFER2") == 0) {
+        if (strcmp(strData, "FILE_TRANSFER") == 0) {
             printf("[+] Receiving File...\n");
-            receive_file(server_fd);
+            receive_file(client_socket);
         } else {
 
             printf("Message: %s\n", strData);
@@ -279,23 +279,24 @@ void receive_message(int server_fd) {
 
 }
 
-void receive_file(int server_fd) {
+void receive_file(int client_fd) {
     int n;
     FILE *fp;
-    char *filename = "recv.txt";
+    char *filename = "recv.c";
     char buffer[SIZE];
 
     fp = fopen(filename, "w");
     while (1) {
-        n = recv(server_fd, buffer, SIZE, 0);
-        printf("status: %d\n", n);
+        n = recv(client_fd, buffer, SIZE, 0);
         if (n <= 0){
             break;
             return;
         }
+
         fprintf(fp, "%s", buffer);
-        bzero(buffer, SIZE);
+        bzero(buffer, SIZE); // memset()
     }
+    fclose(fp);
     return;
 }
 
@@ -303,17 +304,17 @@ void send_file() {
 
     // file stuff and things
     FILE *fp;
-    char *filename = "send.txt";
+    char *filename = "peer.c";
     fp = fopen(filename, "r");
     if (fp == NULL) {
-        perror("[-]Error in reading file.");
+        perror("[-]Error in reading file");
         exit(1);
     }
 
 
     char hello[1024] = {0};
 
-    char *ip = "68.234.244.147"; // 68.234.244.147 // Josh: 68.234.244.163
+    char *ip = "10.189.51.56"; // 68.234.244.147 // Josh: 68.234.244.163
     int port;
     int connectStatus;
 
@@ -328,7 +329,7 @@ void send_file() {
         perror("[-]Error in socket");
         exit(1);
     }
-    printf("[+]Client socket created successfully.\n");
+    printf("[+]Client socket created successfully\n");
 
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = port;
@@ -339,7 +340,7 @@ void send_file() {
         perror("[-]Error in socket");
         exit(1);
     }
-    printf("[+]Connected to Server.\n");
+    printf("[+]Connected to Server\n");
 
     int n;
     char data[SIZE] = {0};
@@ -348,14 +349,15 @@ void send_file() {
     send(client_fd, buffer, sizeof(buffer), 0);
 
     while(fgets(data, SIZE, fp) != NULL) {
+        printf("sending: %s\n", data);
         if (send(client_fd, data, sizeof(data), 0) == -1) {
-            perror("[-]Error in sending file.\n");
+            perror("[-]Error in sending file\n");
             exit(1);
         }
         bzero(data, SIZE);
     }
 
-    printf("[+]File sent.\n");
-    printf("[+]Closing the client connection.\n");
+    printf("[+]File sent\n");
+    printf("[+]Closing the client connection\n");
     close(client_fd);
 }
