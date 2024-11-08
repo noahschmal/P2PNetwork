@@ -37,11 +37,10 @@ void receive_file(int server_fd);
 void receive_message(int server_fd);
 
 void connect_to_network(user_node host, user_node server);
-void receive_client(connection** list, int client_fd);
+void receive_client(int client_fd);
 
 int main(int argc, char const* argv[])
 {
-
     /////////////////////////////
     /* Gather User Information */
     /////////////////////////////
@@ -60,19 +59,25 @@ int main(int argc, char const* argv[])
     printf("Enter your port number: ");
     scanf("%d", &host.port);
 
-    // Gather Server Information
-    printf("Enter SERVER ip address: ");
-    scanf("%s", server.SERVER_IP);
-
-    printf("Enter SERVER port number: ");
-    scanf("%d", &server.port);
-
-    // Connects
-    connect_to_network(host, server);
-
     // Create the socket descriptor variable for the server and then call the create_network function which will initialize our receiving server.
     int server_fd;
     create_network(&host, &server_fd);
+
+    printf("Connect to NETWORK? (1==yes)");
+    int choice;
+    scanf("%d", &choice);
+    if (choice == 1) {
+        // Gather Server Information
+        printf("Enter NETWORK ip address: ");
+        scanf("%s", server.ip);
+
+        printf("Enter NETWORK port number: ");
+        scanf("%d", &server.port);
+
+        // Connects
+        connect_to_network(host, server);
+    }
+
 
     // Call the function to initialize our sending messages loop
     send_message();
@@ -156,7 +161,7 @@ void *receiving(void *s_fd)
 
             if (strcmp(strData, "CONNECTION_INFO") == 0)
             {
-                receive_client(list, client_socket);
+                receive_client(client_socket);
             }
             printf("Message: %s\n", strData);
         }
@@ -236,33 +241,31 @@ void sending()
 }
 
 // Receive new clients and puts them into our connection_list
-void receive_client(connection** list, int client_fd)
+void receive_client(int client_fd)
 {
     connection *head;
-    head.connected_user = malloc(sizeof(user));
-    head.next_connection = NULL;
+    head->node = malloc(sizeof(user_node));
+    head->next = NULL;
 
-    char buffer[20];
-    recv(client_fd, buffer, sizeof(buffer), 0); // NAME
-    strcpy(head->node->name, buffer);
-    bzero(buffer, sizeof(buffer)); // memset()
+    char connection_string[52];
+    recv(client_fd, connection_string, sizeof(connection_string), 0); // Connection string
+    printf("connection string: %s\n", connection_string);
 
-    recv(client_fd, buffer, sizeof(buffer), 0); // IP
-    strcpy(head->node->ip, buffer);
-    bzero(buffer, sizeof(buffer)); // memset()
+    strcpy(head->node->name, strtok(connection_string, ","));
+    strcpy(head->node->ip, strtok(connection_string, ","));
+    head->node->port = atoi(strtok(connection_string, ","));
 
-    recv(client_fd, buffer, sizeof(buffer), 0); // PORT
-    head->node->port = atoi(buffer);
-
-    if (*list->next == NULL) {
-        *list = head;
-    } else {
-        connection* iterator = *list;
-        while (iterator->next != NULL) {
-            iterator = iterator->next;
-        }
-        iterator->next = head;
-    }
+//    if (*list->next == NULL) {
+//        *list = head;
+//    } else {
+//        connection* iterator = *list;
+//        while (iterator->next != NULL) {
+//            iterator = iterator->next;
+//        }
+//        iterator->next = head;
+//    }
+//
+//    printf("head name: %s\n", head->node->name);
 }
 
 void connect_to_network(user_node host, user_node server)
@@ -290,28 +293,24 @@ void connect_to_network(user_node host, user_node server)
         perror("[-]Error in socket");
         exit(1);
     }
-    printf("[+]Connected to Server\n");
-
-    int n;
-    char data[1024] = {0};
+    printf("[+]Connected to Server\n");kia stingeraudi a6
     char buffer[32] = "CONNECTION_INFO";
 
     send(client_fd, buffer, sizeof(buffer), 0);
 
-    char send_name[20];
-    strcpy(send_name, host.name);
-
-    send(client_fd, send_name, sizeof(send_name), 0);
-
-    char send_ip[20];
-    strcpy(send_ip, host.ip);
-
-    send(client_fd, send_ip, sizeof(send_ip), 0);
-
+    // Create and send connection string
+    char connection_string[52] = "";
+    strcpy(connection_string, host.name);
+    strncat(connection_string, ",", 2);
+    strncat(connection_string, host.ip, 20);
+    strncat(connection_string, ",", 2);
     char send_port[10];
     sprintf(send_port, "%d", host.port);
+    strncat(connection_string, send_port, 10);
 
-    send(client_fd, send_port, sizeof(send_port), 0);
+    printf("connection string: %s\n", connection_string);
+
+    send(client_fd, connection_string, sizeof(connection_string), 0);
 
     printf("[+]Closing the client connection.\n");
     close(client_fd);
