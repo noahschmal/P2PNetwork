@@ -243,12 +243,14 @@ void sending()
 // Receive new clients and puts them into our connection_list
 void receive_client(int client_fd)
 {
-    connection *head;
+    char connection_string[60];
+    recv(client_fd, connection_string, sizeof(connection_string), 0); // Connection string
+    printf("[+]HERE2.\n");
+
+    connection *head = malloc(sizeof(connection));
     head->node = malloc(sizeof(user_node));
     head->next = NULL;
 
-    char connection_string[52];
-    recv(client_fd, connection_string, sizeof(connection_string), 0); // Connection string
     printf("connection string: %s\n", connection_string);
 
     strcpy(head->node->name, strtok(connection_string, ","));
@@ -293,13 +295,13 @@ void connect_to_network(user_node host, user_node server)
         perror("[-]Error in socket");
         exit(1);
     }
-    printf("[+]Connected to Server\n");kia stingeraudi a6
+    printf("[+]Connected to Server\n");
     char buffer[32] = "CONNECTION_INFO";
 
     send(client_fd, buffer, sizeof(buffer), 0);
 
     // Create and send connection string
-    char connection_string[52] = "";
+    char connection_string[60] = "";
     strcpy(connection_string, host.name);
     strncat(connection_string, ",", 2);
     strncat(connection_string, host.ip, 20);
